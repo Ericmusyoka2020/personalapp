@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Transaction Generator</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #121212;
+  color: #e0e0e0;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+}
+.container {
+  max-width: 450px;
+  background: #1e1e1e;
+  margin: 0 auto;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.step-label {
+  display: none;
+  margin-top: 15px;
+  font-weight: 600;
+  color: #b0b0b0;
+  text-align: center;
+}
+.step-label.active { display: block; }
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  display: none;
+}
+input.active, button.active { display: block; }
+input {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #404040;
+}
+input::placeholder { color: #888; }
+input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+button {
+  background: linear-gradient(135deg, #080808, #0d0e0d);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+button:hover {
+  background: linear-gradient(135deg, #45a049, #388e3c);
+  transform: translateY(-1px);
+}
+button:active { transform: translateY(0); }
+pre {
+  background: #252525;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  white-space: pre-wrap;
+  font-size: 14px;
+  min-height: 50px;
+}
+.status-error {
+  color: #ff5252;
+  border-left: 4px solid #ff5252;
+}
+.status-success {
+  color: #e0e0e0;
+  border-left: 4px solid #4caf50;
+}
+@media (max-width: 480px) {
+  body { padding: 15px; }
+  .container { padding: 20px; margin: 10px auto; border-radius: 16px; }
+  input, button { padding: 14px; font-size: 17px; }
+}
+.hint {
+  color: #888;
+  font-size: 13px;
+  margin-top: 4px;
+  text-align: center;
+  display: none;
+}
+.hint.active { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Step 1: Business No. -->
+  <div class="step-label active" id="phoneLabel">Enter business no.</div>
+  <input type="text" id="phone" class="active" placeholder="">
+  <button id="phoneOkBtn" class="active">OK</button>
+
+  <!-- Step 2: Account Number -->
+  <div class="step-label" id="accountLabel">Enter Account Number</div>
+  <input type="text" id="account" placeholder="">
+  <button id="accountOkBtn">OK</button>
+
+  <!-- Step 3: Amount -->
+  <div class="step-label" id="amountLabel">Enter Amount</div>
+  <input type="number" id="amount" placeholder="">
+  <button id="amountOkBtn">OK</button>
+
+  <!-- Step 4: Recipient Name -->
+  <div class="step-label" id="nameLabel">Recipient Name</div>
+  <input type="text" id="name" placeholder="">
+  <div class="hint" id="nameHint">Edit if incorrect</div>
+  <button id="nameOkBtn">OK</button>
+
+  <button id="sendBtn">Send</button>
+
+  <pre id="output"></pre>
+</div>
+
+<script>
+const API = "https://meapp.emxluz.xyz";
+const STORAGE_KEY = "tillToNameMap";
+
+const elements = {
+  phone: document.getElementById("phone"),
+  amount: document.getElementById("amount"),
+  account: document.getElementById("account"),
+  name: document.getElementById("name"),
+  nameHint: document.getElementById("nameHint"),
+  output: document.getElementById("output"),
+  phoneOkBtn: document.getElementById("phoneOkBtn"),
+  amountOkBtn: document.getElementById("amountOkBtn"),
+  accountOkBtn: document.getElementById("accountOkBtn"),
+  nameOkBtn: document.getElementById("nameOkBtn"),
+  sendBtn: document.getElementById("sendBtn")
+};
+
+let tillToName = {};
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) tillToName = JSON.parse(saved);
+} catch (e) {}
+
+function showMsg(text, isError = false) {
+  elements.output.textContent = text;
+  elements.output.className = isError ? 'status-error' : 'status-success';
+}
+
+function saveTillName(till, fullName) {
+  if (!till || !fullName.trim()) return;
+  tillToName[till.trim()] = fullName.trim();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tillToName));
+}
+
+function getSavedName(till) {
+  return tillToName[till.trim()] || "";
+}
+
+function hideAll(){
+  document.querySelectorAll(".step-label, input, button, .hint").forEach(e=>e.classList.remove("active"));
+}
+
+function showPhone(){
+  hideAll();
+  showMsg("");
+  document.getElementById("phoneLabel").classList.add("active");
+  elements.phone.classList.add("active");
+  elements.phoneOkBtn.classList.add("active");
+}
+
+function showAccount(){
+  hideAll();
+  document.getElementById("accountLabel").classList.add("active");
+  elements.account.classList.add("active");
+  elements.accountOkBtn.classList.add("active");
+}
+
+function showAmount(){
+  hideAll();
+  document.getElementById("amountLabel").classList.add("active");
+  elements.amount.classList.add("active");
+  elements.amountOkBtn.classList.add("active");
+}
+
+function showName(){
+  hideAll();
+  document.getElementById("nameLabel").classList.add("active");
+  elements.name.classList.add("active");
+  elements.nameOkBtn.classList.add("active");
+  elements.nameHint.classList.add("active");
+}
+
+function showSend(){
+  hideAll();
+  elements.sendBtn.classList.add("active");
+}
+
+function token(){
+  const now = new Date();
+  const day = now.getDate(); 
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
+  for (let i = 0; i < 4; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return "UB" + day + "K65" + randomPart;
+}
+
+function getDateTime(){
+  const d = new Date();
+  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()).slice(-2)}`;
+  // Updated for 12-hour format with AM/PM
+  const timeStr = d.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+  return { date: dateStr, time: timeStr };
+}
+
+showPhone();
+
+elements.phoneOkBtn.onclick = async () => {
+  const till = elements.phone.value.trim();
+  if (!till) return showMsg("Please enter business number", true);
+
+  let prefilled = getSavedName(till);
+  if (!prefilled) {
+    try {
+      const r = await fetch(`${API}/lookup/${till}`);
+      const d = await r.json();
+      if (d.found && d.name) {
+        prefilled = d.name;
+        saveTillName(till, prefilled);
+      }
+    } catch {}
+  }
+  elements.name.value = prefilled;
+  showAccount();
+};
+
+elements.accountOkBtn.onclick = () => {
+  if (!elements.account.value.trim()) return showMsg("Enter account number", true);
+  showAmount(); 
+};
+
+elements.amountOkBtn.onclick = () => {
+  if (+elements.amount.value <= 0) return showMsg("Invalid amount", true);
+  showName();
+};
+
+elements.nameOkBtn.onclick = () => {
+  if (!elements.name.value.trim()) return showMsg("Enter full name", true);
+  saveTillName(elements.phone.value.trim(), elements.name.value.trim());
+  showSend();
+};
+
+elements.sendBtn.onclick = async () => {
+  const a = +elements.amount.value;
+  const t = token();
+  const { date, time } = getDateTime();
+
+  const msg = `${t} Confirmed. Ksh${a.toFixed(2)} transferred to ${elements.name.value} for account ${elements.account.value} on ${date} at ${time}. Merchant Account Balance is Ksh${(Math.random()*2000+500).toFixed(2)}.`;
+
+  showMsg(msg);
+
+  try {
+    await fetch(`${API}/send`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        phone: elements.phone.value,
+        name: elements.name.value,
+        amount: a,
+        message: msg,
+        token: t
+      })
+    });
+  } catch (e) {}
+  
+  setTimeout(showPhone, 15000);
+};
+</script>
+</body>
+</html>
