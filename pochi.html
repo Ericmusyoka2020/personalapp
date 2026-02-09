@@ -202,7 +202,7 @@ elements.send.addEventListener("click", async () => {
     localStorage.setItem('mledger_user', JSON.stringify(user));
 
     const token = "UB" + new Date().getDate() + "K65" + Math.random().toString(36).substring(2,6).toUpperCase();
-    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal}  on ${new Date().toLocaleDateString()}. New balance Ksh${user.balance.toFixed(2)}. Transaction cost, Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,960.00.Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke.`;
+    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal}  on ${new Date().toLocaleDateString()}. New M-PESA balance Ksh${user.balance.toFixed(2)}. Transaction cost, Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,960.00.Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke.`;
 
     showStatus(message);
 
