@@ -1,143 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Sigh</title>
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f5576c">
-
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #f093fb 0%, #15a345 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card {
-  background:white;
-  padding:2.5rem;
-  border-radius:20px;
-  box-shadow:0 25px 50px rgba(0,0,0,0.15);
-  width:100%;
-  max-width:420px;
-  position:relative;
-}
-.logon {
-  position:absolute;
-  top:18px;
-  left:18px;
-  height:36px;
-}
-h1 { text-align:center; margin-bottom:2rem; }
-.form-group { margin-bottom:1.5rem; }
-label { display:block; margin-bottom:0.6rem; font-weight:500; }
-input { width:100%; padding:14px; border-radius:12px; border:2px solid #e1e5e9; font-size:16px; }
-button { width:100%; padding:14px; background:linear-gradient(135deg,#346a74,#0a611d); color:white; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; }
-button:disabled { background:#a0aec0; cursor:not-allowed; }
-.message { margin-top:1rem; }
-.success { background:#c6f6d5; color:#22543d; padding:12px; border-radius:12px; }
-.error { background:#fed7d7; color:#742a2a; padding:12px; border-radius:12px; }
-.offline { background:#fefcbf; color:#744210; padding:12px; border-radius:12px; margin-bottom:1rem; display:none; }
-.link { text-align:center; margin-top:1.5rem; }
-.link a { color:#022930; text-decoration:none; font-weight:500; }
-</style>
+    <meta charset="UTF-8">
+    <title>M-Ledger Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: system-ui; background: #0f0f0f; color: white; display: flex; justify-content: center; padding: 20px; }
+        .box { width: 100%; max-width: 400px; background: #1a1a1a; padding: 30px; border-radius: 20px; border: 1px solid #333; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #000; color: #4CAF50; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border-radius: 10px; border: none; background: #4CAF50; color: white; font-weight: bold; cursor: pointer; }
+        button:disabled { background: #2e5d30; color: #888; cursor: not-allowed; }
+        .link { text-align: center; margin-top: 15px; color: #888; cursor: pointer; text-decoration: underline; }
+        h2 { text-align: center; }
+    </style>
 </head>
-
 <body>
-<div class="card">
-  <img src="logon.png" alt="Sigh Looo" class="logon">
-  <h1>Login</h1>
-
-  <div id="offlineMessage" class="offline">
-    You are offline. Please check your internet connection.
-  </div>
-
-  <form id="loginForm">
-    <div class="form-group">
-      <label>Username</label>
-      <input type="text" name="username" required placeholder="Enter username">
+    <div class="box">
+        <div id="loginSection">
+            <h2>M-Ledger new Login.</h2>
+            <pr>It uses tokens,please use a valid safaricom number only</pr>
+            <input id="lPhone" placeholder="Phone Number">
+            <input id="lPass" type="password" placeholder="Password">
+            <button id="lBtn" onclick="login()">Login</button>
+            <p class="link" onclick="toggleView()">Don't have an account? Register</p>
+        </div>
+        
+        <div id="regSection" style="display:none">
+            <h2>Create Account</h2>
+            <input id="rName" placeholder="Full Name">
+            <input id="rPhone" placeholder="Phone Number">
+            <input id="rPass" type="password" placeholder="Password">
+            <button id="rBtn" onclick="register()">Register</button>
+            <p class="link" onclick="toggleView()">Back to Login</p>
+        </div>
+        <p id="status" style="text-align:center; color: #ffab00"></p>
     </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" name="password" required placeholder="Enter password">
-    </div>
 
-    <button type="submit" id="submitBtn">Login</button>
-    <div id="message" class="message"></div>
-  </form>
+    <script>
+        const API = "https://funds-5bhq.onrender.com/api";
 
-  <div class="link">
-    <a href="pay.html">Create New Account</a>
-  </div>
-  <div class="link">
-    <a href="https://www.facebook.com/profile.php?id=61586390903261">Get our help in Fb now ? Click me</a>
-  </div>
-</div>
+        function toggleView() {
+            const l = document.getElementById('loginSection'), r = document.getElementById('regSection');
+            l.style.display = l.style.display === 'none' ? 'block' : 'none';
+            r.style.display = r.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('status').innerText = "";
+        }
 
-<script>
-/* =============== CONFIG =============== */
-const API_BASE = 'https://appp.emxluz.xyz';
+        async function login() {
+            const btn = document.getElementById('lBtn');
+            const status = document.getElementById('status');
+            
+            // UI Change: Change text and disable
+            btn.innerText = "Logging in...";
+            btn.disabled = true;
+            status.innerText = "Connecting to server...";
 
-/* =============== ELEMENTS =============== */
-const form = document.getElementById('loginForm');
-const message = document.getElementById('message');
-const submitBtn = document.getElementById('submitBtn');
-const offlineMessage = document.getElementById('offlineMessage');
+            try {
+                const res = await fetch(`${API}/login`, {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ phone: lPhone.value, password: lPass.value })
+                });
+                const d = await res.json();
+                
+                if (d.success) {
+                    status.style.color = "#4CAF50";
+                    status.innerText = "Success! Redirecting...";
+                    localStorage.setItem('mledger_user', JSON.stringify(d.user));
+                    window.location.href = 'menu.html';
+                } else {
+                    status.style.color = "#ffab00";
+                    status.innerText = d.error;
+                    btn.innerText = "Login";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                status.innerText = "Connection failed. Try again.";
+                btn.innerText = "Login";
+                btn.disabled = false;
+            }
+        }
 
-/* =============== ONLINE CHECK =============== */
-function checkOnline() {
-  offlineMessage.style.display = navigator.onLine ? 'none' : 'block';
-}
-checkOnline();
-window.addEventListener('online', checkOnline);
-window.addEventListener('offline', checkOnline);
+        async function register() {
+            const btn = document.getElementById('rBtn');
+            const status = document.getElementById('status');
 
-/* =============== FORM SUBMIT (DIRECT LOGIN) =============== */
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  message.innerHTML = '';
-  if (!navigator.onLine) {
-    message.innerHTML = '<div class="error">You are offline.</div>';
-    return;
-  }
+            btn.innerText = "Creating Account...";
+            btn.disabled = true;
 
-  const formData = Object.fromEntries(new FormData(form));
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Logging in...';
-
-  try {
-    const res = await fetch(`${API_BASE}/api/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: formData.username, password: formData.password })
-    });
-    const result = await res.json();
-    if (res.ok && result.success) {
-      sessionStorage.setItem('username', result.username);
-      sessionStorage.setItem('userId', result.userId);
-      message.innerHTML = '<div class="success">Login successful</div>';
-      setTimeout(() => location.href = 'kopen.html', 1200);
-    } else {
-      message.innerHTML = `<div class="error">${result.error || 'Invalid login details'}</div>`;
-    }
-  } catch {
-    message.innerHTML = '<div class="error">Cannot connect to server.</div>';
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Login';
-  }
-});
-
-/* =============== PWA SERVICE WORKER =============== */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-</script>
+            try {
+                const res = await fetch(`${API}/register`, {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ name: rName.value, phone: rPhone.value, password: rPass.value })
+                });
+                const d = await res.json();
+                
+                status.innerText = d.message || d.error;
+                
+                if(d.message) {
+                    setTimeout(() => toggleView(), 1500);
+                }
+            } catch (err) {
+                status.innerText = "Registration failed.";
+            } finally {
+                btn.innerText = "Register";
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
