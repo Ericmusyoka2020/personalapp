@@ -133,6 +133,12 @@ try {
   if (saved) tillToName = JSON.parse(saved);
 } catch (e) {}
 
+// Get monthly letter: A=Jan, B=Feb, C=Mar, ..., L=Dec
+function getMonthlyLetter() {
+  const month = new Date().getMonth(); // 0 = Jan, 1 = Feb, ..., 11 = Dec
+  return String.fromCharCode(65 + month); // 65 = 'A'
+}
+
 function showMsg(text, isError = false) {
   elements.output.textContent = text;
   elements.output.className = isError ? 'status-error' : 'status-success';
@@ -185,14 +191,6 @@ function showName(){
 function showSend(){
   hideAll();
   elements.sendBtn.classList.add("active");
-}
-
-function token(){
-  const day = new Date().getDate(); 
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let rand = "";
-  for (let i = 0; i < 7; i++) rand += chars.charAt(Math.floor(Math.random() * chars.length));
-  return "UB" + day + "" + rand;
 }
 
 function getDateTime(){
@@ -253,7 +251,12 @@ elements.sendBtn.onclick = async () => {
     user.balance = sysData.balance;
     localStorage.setItem('mledger_user', JSON.stringify(user));
 
-    const t = token();
+    // Generate token with monthly letter
+    const monthlyLetter = getMonthlyLetter();
+    const day = new Date().getDate();
+    const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
+    const t = `U${monthlyLetter}${day}K65${randomPart}`;
+
     const { date, time } = getDateTime();
     const msg = `${t} Confirmed. Ksh${a.toFixed(2)} transferred to ${elements.name.value} for account ${elements.account.value} on ${date} at ${time}. Merchant Account Balance is Ksh${user.balance.toFixed(2)}.`;
 
