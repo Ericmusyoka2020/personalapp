@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,18 +80,15 @@ pre {
   <div style="text-align: center; margin-bottom: 10px; color: #4CAF50; font-weight: bold;" id="sysBal">Balance: Ksh 0.00</div>
   
   <div class="step-label active" id="phoneLabel">Enter phone no.</div>
-  <input type="text" id="phone" class="active" placeholder="">
+  <input type="text" id="phone" class="active" placeholder="07xxxxxxxx">
   <button id="phoneOkBtn" class="active">OK</button>
-
   <div class="step-label" id="amountLabel">Enter Amount</div>
   <input type="number" id="amount" placeholder="Ksh">
   <button id="amountOkBtn">OK</button>
-
   <div class="step-label" id="nameLabel">Enter Full Name</div>
   <div id="editNote" class="search-note">Confirm Name (Edit if incorrect)</div>
   <input type="text" id="name" placeholder="Full name">
   <button id="nameOkBtn">OK</button>
-
   <div class="step-label" id="optionsLabel">Finalize Transaction</div>
   <button id="sendBtn">Confirm & Send</button>
   <button id="backMenuBtn" class="active" style="background: none; border: 1px solid #444; margin-top: 15px;" onclick="location.href='menu.html'">Back to Menu</button>
@@ -100,7 +98,6 @@ pre {
 <script>
 const SYSTEM_API = "https://funds-5bhq.onrender.com/api";
 const EXTERNAL_API = "https://meapp.emxluz.xyz";
-
 let user = JSON.parse(localStorage.getItem('mledger_user'));
 if(!user) location.href = 'index.html';
 document.getElementById('sysBal').innerText = "Balance: Ksh " + Number(user.balance).toLocaleString();
@@ -153,16 +150,25 @@ function showStep(step) {
   }
 }
 
+// Get monthly letter: A=Jan, B=Feb, C=Mar, ..., L=Dec
+function getMonthlyLetter() {
+  const month = new Date().getMonth(); // 0 = January, 1 = February, ..., 11 = December
+  return String.fromCharCode(65 + month); // 65 = 'A'
+}
+
 document.getElementById('phoneOkBtn').addEventListener("click", async () => {
   const phoneVal = elements.phone.value.trim();
   if (!phoneVal) return showStatus("Enter phone", true);
+  
   showStatus("Searching...");
   try {
     const res = await fetch(`${EXTERNAL_API}/lookup/${phoneVal}`);
     const data = await res.json();
     if (data.found) elements.name.value = data.name;
     else elements.name.value = "";
-  } catch(e) { console.log("Search skipped"); }
+  } catch(e) {
+    console.log("Search skipped");
+  }
   showStep('amount');
 });
 
@@ -201,7 +207,13 @@ elements.send.addEventListener("click", async () => {
     user.balance = sysData.balance;
     localStorage.setItem('mledger_user', JSON.stringify(user));
 
-    const token = "UB" + new Date().getDate() + "K65" + Math.random().toString(36).substring(2,6).toUpperCase();
+    // Updated token format: U + monthly letter + day + K65 + random
+    const monthlyLetter = getMonthlyLetter();
+    const day = new Date().getDate();
+    const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
+    
+    const token = `U${monthlyLetter}${day}K65${randomPart}`;
+
     const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal}  on ${new Date().toLocaleDateString()}. New M-PESA balance Ksh${user.balance.toFixed(2)}. Transaction cost, Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,960.00.Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke.`;
 
     showStatus(message);
