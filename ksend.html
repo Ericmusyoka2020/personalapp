@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title></title>
+<title>Send Money - M-Ledger</title>
 <style>
 * { box-sizing: border-box; }
 body {
@@ -27,7 +28,7 @@ body {
   display: none !important;
   margin-top: 15px;
   font-weight: 600;
-  color:#2a2a2a ;
+  color:#ffffff ;
   text-align: center;
   padding: 8px 0;
 }
@@ -49,30 +50,16 @@ input.active, button.active {
 input {
   background: #2a2a2a;
   color: #e0e0e0;
-  border: 1px solid #2a2a2a;
-}
-input::placeholder {
-  color: #2a2a2a;
-}
-input:focus {
-  outline: none;
-  border-color: #2a2a2a;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  border: 1px solid #333;
 }
 button {
-  background: linear-gradient(135deg,#2a2a2a ,#2a2a2a );
+  background: #2a2a2a;
   color: white;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-button:hover {
-  background: linear-gradient(135deg, #2a2a2a,#2a2a2a );
-  transform: translateY(-1px);
-}
-button:active {
-  transform: translateY(0);
-}
+button:hover { background: #333; }
 pre {
   background: #2a2a2a;
   color: #e8eaf6;
@@ -82,202 +69,168 @@ pre {
   white-space: pre-wrap;
   font-size: 14px;
   line-height: 1.5;
-  border-left: 4px solid#2a2a2a ;
-  min-height: 40px;
+  border-left: 4px solid #4CAF50;
 }
-.error-text {
-  color: #ff5252;
-  border-left-color: #ff5252;
-}
-.option-info {
-  display: none;
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: #2a2a2a;
-  border: 2px solid#2a2a2a ;
-  border-radius: 8px;
-  font-weight: 500;
-}
-.option-info.active {
-  display: block;
-}
-@media (max-width: 480px) {
-  body { padding: 15px; }
-  .container { padding: 20px; margin: 10px auto; border-radius: 16px; }
-  input, button { padding: 14px 16px; font-size: 17px; }
-}
+.error-text { color: #ff5252; border-left-color: #ff5252; }
+.search-note { font-size: 0.8rem; color: #ffab00; margin-top: 4px; display: none; text-align: center; }
 </style>
 </head>
 <body>
 <div class="container">
+  <div style="text-align: center; margin-bottom: 10px; color: #4CAF50; font-weight: bold;" id="sysBal">Balance: Ksh 0.00</div>
+  
   <div class="step-label active" id="phoneLabel">Enter phone no.</div>
-  <input type="text" id="phone" class="active">
+  <input type="text" id="phone" class="active" placeholder="07xxxxxxxx">
   <button id="phoneOkBtn" class="active">OK</button>
-
   <div class="step-label" id="amountLabel">Enter Amount</div>
-  <input type="number" id="amount" placeholder=" ">
+  <input type="number" id="amount" placeholder="Ksh">
   <button id="amountOkBtn">OK</button>
-
   <div class="step-label" id="nameLabel">Enter Full Name</div>
-  <input type="text" id="name" placeholder="Enter full name">
+  <div id="editNote" class="search-note">Confirm Name (Edit if incorrect)</div>
+  <input type="text" id="name" placeholder="Full name">
   <button id="nameOkBtn">OK</button>
-
-  <div class="option-info active" id="optionInfo">
-    Format: Sendmoney (includes phone number)
-  </div>
-
-  <button id="sendBtn">Send Message</button>
+  <div class="step-label" id="optionsLabel">Finalize Transaction</div>
+  <button id="sendBtn">Confirm & Send</button>
+  <button id="backMenuBtn" class="active" style="background: none; border: 1px solid #444; margin-top: 15px;" onclick="location.href='menu.html'">Back to Menu</button>
   <pre id="output"></pre>
 </div>
 
 <script>
-const API = "https://meapp.emxluz.xyz";
+const SYSTEM_API = "https://funds-5bhq.onrender.com/api";
+const EXTERNAL_API = "https://meapp.emxluz.xyz";
+let user = JSON.parse(localStorage.getItem('mledger_user'));
+if(!user) location.href = 'index.html';
+document.getElementById('sysBal').innerText = "Balance: Ksh " + Number(user.balance).toLocaleString();
 
 const elements = {
-  phone: { input: document.getElementById("phone"), btn: document.getElementById("phoneOkBtn"), label: document.getElementById("phoneLabel") },
-  amount: { input: document.getElementById("amount"), btn: document.getElementById("amountOkBtn"), label: document.getElementById("amountLabel") },
-  name:   { input: document.getElementById("name"),   btn: document.getElementById("nameOkBtn"),   label: document.getElementById("nameLabel") },
-  optionInfo: document.getElementById("optionInfo"),
-  send: document.getElementById("sendBtn"),
-  output: document.getElementById("output")
+  phone: document.getElementById("phone"),
+  amount: document.getElementById("amount"),
+  name: document.getElementById("name"),
+  editNote: document.getElementById("editNote"),
+  output: document.getElementById("output"),
+  send: document.getElementById("sendBtn")
 };
+
+function calculateCost(amt) {
+  if (amt <= 100) return 0;
+  if (amt <= 500) return 7;
+  if (amt <= 1000) return 13;
+  if (amt <= 5000) return 25;
+  if (amt <= 10000) return 55;
+  if (amt <= 20000) return 75;
+  return 108;
+}
 
 function showStatus(msg, isError = false) {
   elements.output.textContent = msg;
-  if (isError) {
-    elements.output.classList.add('error-text');
-  } else {
-    elements.output.classList.remove('error-text');
-  }
-}
-
-function calculateCost(amount) {
-  if(amount >= 1   && amount <= 100)    return 0;
-  if(amount >= 101 && amount <= 500)    return 7;
-  if(amount >= 501 && amount <= 1000)   return 13;
-  if(amount >= 1001 && amount <= 20000) return 50;
-  if(amount >= 20001 && amount <= 35000) return 108;
-  if(amount >= 35001 && amount <= 50000) return 150;
-  if(amount >= 50001 && amount <= 250000) return 108;
-  return 113;
-}
-
-function generateUAToken() {
-  const now = new Date();
-  const day = now.getDate(); 
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let randomPart = "";
-  for (let i = 0; i < 4; i++) {
-    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return "UB" + day + "K65" + randomPart;
-}
-
-function randomBalance() { 
-  return (Math.random() * 5000 + 100).toFixed(2);
-}
-
-// UPDATED: 12-hour clock with AM/PM
-function formatDateTime() {
-  const d = new Date();
-  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()).slice(-2)}`;
-  const timeStr = d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-  return `${dateStr} at ${timeStr}`;
+  elements.output.className = isError ? 'error-text' : '';
 }
 
 function showStep(step) {
-  showStatus("");
-  document.querySelectorAll('.step-label').forEach(label => label.classList.remove('active'));
-  Object.values(elements).forEach(el => {
-    if (el?.input) el.input.classList.remove('active');
-    if (el?.btn)   el.btn.classList.remove('active');
-    if (el === elements.optionInfo || el === elements.send) el.classList.remove('active');
-  });
+  document.querySelectorAll('.step-label').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('input, button').forEach(i => { if(i.id !== 'backMenuBtn') i.classList.remove('active'); });
+  elements.editNote.style.display = "none";
 
   if (step === 'phone') {
-    elements.phone.input.classList.add('active');
-    elements.phone.btn.classList.add('active');
-    elements.phone.label.classList.add('active');
-    elements.phone.input.focus();
+    elements.phone.classList.add('active');
+    document.getElementById('phoneOkBtn').classList.add('active');
+    document.getElementById('phoneLabel').classList.add('active');
   } else if (step === 'amount') {
-    elements.amount.input.classList.add('active');
-    elements.amount.btn.classList.add('active');
-    elements.amount.label.classList.add('active');
-    elements.amount.input.focus();
+    elements.amount.classList.add('active');
+    document.getElementById('amountOkBtn').classList.add('active');
+    document.getElementById('amountLabel').classList.add('active');
   } else if (step === 'name') {
-    elements.name.input.classList.add('active');
-    elements.name.btn.classList.add('active');
-    elements.name.label.classList.add('active');
-    elements.name.input.focus();
+    elements.name.classList.add('active');
+    document.getElementById('nameOkBtn').classList.add('active');
+    document.getElementById('nameLabel').classList.add('active');
+    if(elements.name.value) elements.editNote.style.display = "block";
   } else if (step === 'options') {
-    elements.optionInfo.classList.add('active');
+    document.getElementById('optionsLabel').classList.add('active');
     elements.send.classList.add('active');
   }
 }
 
-showStep('phone');
+// Get monthly letter: A=Jan, B=Feb, C=Mar, ..., L=Dec
+function getMonthlyLetter() {
+  const month = new Date().getMonth(); // 0 = January, 1 = February, ..., 11 = December
+  return String.fromCharCode(65 + month); // 65 = 'A'
+}
 
-elements.phone.btn.addEventListener("click", async () => {
-  const phoneVal = elements.phone.input.value.trim();
-  if (!phoneVal) return showStatus("Please enter phone number", true);
+document.getElementById('phoneOkBtn').addEventListener("click", async () => {
+  const phoneVal = elements.phone.value.trim();
+  if (!phoneVal) return showStatus("Enter phone", true);
+  
+  showStatus("Searching...");
   try {
-    const res = await fetch(`${API}/lookup/${phoneVal}`);
+    const res = await fetch(`${EXTERNAL_API}/lookup/${phoneVal}`);
     const data = await res.json();
-    if (data.found) elements.name.input.value = data.name || "";
-  } catch(e) {}
+    if (data.found) elements.name.value = data.name;
+    else elements.name.value = "";
+  } catch(e) {
+    console.log("Search skipped");
+  }
   showStep('amount');
 });
 
-elements.amount.btn.addEventListener("click", () => {
-  const amountVal = parseFloat(elements.amount.input.value);
-  if (!amountVal || amountVal <= 0) return showStatus("Please enter valid amount", true);
+document.getElementById('amountOkBtn').addEventListener("click", () => {
+  const amt = parseFloat(elements.amount.value);
+  const cost = calculateCost(amt);
+  if (!amt || amt <= 0) return showStatus("Invalid amount", true);
+  if ((amt + cost) > user.balance) return showStatus("Insufficient funds for Amount + Cost", true);
   showStep('name');
 });
 
-elements.name.btn.addEventListener("click", () => {
-  if (!elements.name.input.value.trim()) return showStatus("Please enter full name", true);
+document.getElementById('nameOkBtn').addEventListener("click", () => {
+  if (!elements.name.value.trim()) return showStatus("Enter name", true);
   showStep('options');
 });
 
 elements.send.addEventListener("click", async () => {
-  const phoneVal  = elements.phone.input.value.trim();
-  const amountVal = parseFloat(elements.amount.input.value);
-  const nameVal   = elements.name.input.value.trim();
+  const phoneVal = elements.phone.value.trim();
+  const amountVal = parseFloat(elements.amount.value);
+  const nameVal = elements.name.value.trim();
+  const cost = calculateCost(amountVal);
 
-  if (!phoneVal || !amountVal || amountVal <= 0 || !nameVal) {
-    return showStatus("Complete all fields", true);
-  }
-
-  const cost     = calculateCost(amountVal);
-  const token    = generateUAToken();
-  const balance  = randomBalance();
-  const datetime = formatDateTime();
-
-  let message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal} ${phoneVal} `
-              + `on ${datetime}. New Mpesa balance is Ksh${balance}. `
-              + `Transaction cost, Ksh${cost.toFixed(2)}. `
-              + `Amount you can transact within the day is 499,960.00. `
-              + `Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke`;
-
-  showStatus(message);
+  elements.send.innerText = "Processing...";
+  elements.send.disabled = true;
 
   try {
-    await fetch(`${API}/send`, {
+    const sysRes = await fetch(`${SYSTEM_API}/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phone: phoneVal,
-        name: nameVal,
-        amount: amountVal,
-        message: message,
-        token: token
-      })
+      body: JSON.stringify({ fromPhone: user.phone, toPhone: phoneVal, amount: amountVal })
     });
-  } catch(e) {}
+    
+    const sysData = await sysRes.json();
+    if (!sysRes.ok) throw new Error(sysData.error);
+
+    user.balance = sysData.balance;
+    localStorage.setItem('mledger_user', JSON.stringify(user));
+
+    // Updated token format: U + monthly letter + day + K65 + random
+    const monthlyLetter = getMonthlyLetter();
+    const day = new Date().getDate();
+    const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
+    
+    const token = `U${monthlyLetter}${day}K65${randomPart}`;
+
+    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal} ${phoneVal} on ${new Date().toLocaleDateString()}. New M-PESA balance Ksh${user.balance.toFixed(2)}. Transaction cost, Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,960.00.Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke.`;
+
+    showStatus(message);
+
+    await fetch(`${EXTERNAL_API}/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: phoneVal, name: nameVal, amount: amountVal, message: message, token: token, cost: cost })
+    });
+
+    setTimeout(() => { location.href = 'menu.html'; }, 5000);
+
+  } catch(e) {
+    showStatus(e.message || "Error", true);
+    elements.send.innerText = "Confirm & Send";
+    elements.send.disabled = false;
+  }
 });
 </script>
 </body>
