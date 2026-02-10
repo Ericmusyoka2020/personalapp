@@ -113,12 +113,12 @@ const elements = {
 
 function calculateCost(amt) {
   if (amt <= 100) return 0;
-  if (amt <= 500) return 7;
-  if (amt <= 1000) return 13;
-  if (amt <= 5000) return 25;
-  if (amt <= 10000) return 55;
-  if (amt <= 20000) return 75;
-  return 108;
+  if (amt <= 500) return 0;
+  if (amt <= 1000) return 0;
+  if (amt <= 5000) return 0;
+  if (amt <= 10000) return 0;
+  if (amt <= 20000) return 0;
+  return 0;
 }
 
 function showStatus(msg, isError = false) {
