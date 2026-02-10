@@ -111,7 +111,7 @@
                 statusDiv.innerText = "Check your phone for the M-Pesa PIN prompt. Do not refresh.";
                 startPolling(invoiceId, amt);
             } else {
-                throw new Error("STK push failed. Check phone format.");
+                throw new Error("STK push failed.Use safaricom verified number.");
             }
         } catch (err) {
             statusDiv.style.color = "red";
