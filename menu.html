@@ -60,7 +60,7 @@
             if (isHidden) {
                 // Fetch the latest balance from the server to ensure accuracy
                 try {
-                    const response = await fetch(`https://funds-5bhq.onrender.com/api/balance/${user.phone}`);
+                    const response = await fetch(`https://money.emxluz.xyz/api/balance/${user.phone}`);
                     const data = await response.json();
                     
                     if (data.success) {
