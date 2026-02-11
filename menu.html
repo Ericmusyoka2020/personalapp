@@ -5,21 +5,32 @@
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: system-ui; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        header { width: 100%; background: #2e7d32; color: white; padding: 30px 20px; text-align: center; border-radius: 0 0 30px 30px; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        header { width: 100%; background: #2e7d32; color: white; padding: 30px 20px; text-align: center; border-radius: 0 0 30px 30px; box-sizing: border-box; position: relative; }
+        
+        /* Balance Container Styling */
+        .balance-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 5px; }
+        #bal { margin: 0; font-size: 1.8rem; }
+        .toggle-eye { cursor: pointer; font-size: 1.2rem; opacity: 0.8; transition: 0.2s; padding: 5px; }
+        .toggle-eye:hover { opacity: 1; }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 25px; max-width: 400px; width: 100%; box-sizing: border-box; }
         .card { background: white; padding: 25px 10px; border-radius: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; font-weight: bold; color: #333; transition: 0.2s; border: 1px solid #eee; }
         .card:active { transform: scale(0.95); background: #f0f0f0; }
         .icon { font-size: 2rem; display: block; margin-bottom: 10px; }
-        .logout { margin-top: 20px; color: #d32f2f; cursor: pointer; font-weight: bold; font-size: 0.9rem; padding: 15px; }
+        .logout { margin-top: 20px; color: #d32f2f; cursor: pointer; font-weight: bold; font-size: 0.9rem; padding: 15px; margin-bottom: 30px; }
     </style>
 </head>
 <body>
     <header>
-        <h2 id="name">Hello!</h2>
-        <h1 id="bal">Ksh 0.00</h1>
+        <h2 id="name" style="margin-bottom: 10px; font-weight: 500;">Hello!</h2>
+        <div class="balance-container">
+            <h1 id="bal"></h1>
+            <span id="eye-icon" class="toggle-eye" onclick="toggleBalance()">👁️</span>
+        </div>
         <p style="margin:0; opacity:0.8; font-size: 0.9rem;">Available Balance</p>
     </header>
+
     <div class="grid">
         <div class="card" onclick="location.href='send.html'"><span class="icon">💸</span>Send Money</div>
         <div class="card" onclick="location.href='pochi.html'"><span class="icon">💜</span>Pochi</div>
@@ -28,13 +39,57 @@
         <div class="card" onclick="location.href='withdraw.html'"><span class="icon">🏧</span>Withdraw</div>
         <div class="card" onclick="location.href='fund.html'"><span class="icon">➕</span>Funding</div>
     </div>
-    <div class="logout" onclick="localStorage.clear(); location.href='index.html'">Sign Out</div>
+
+    <div class="logout" onclick="logout()">Sign Out</div>
 
     <script>
+        // Initialize user data
         const user = JSON.parse(localStorage.getItem('mledger_user'));
-        if(!user) location.href = 'index.html';
-        document.getElementById('name').innerText = "Hello, " + user.full_name;
-        document.getElementById('bal').innerText = "Ksh " + Number(user.balance).toLocaleString();
+        let isHidden = true;
+
+        if(!user) {
+            location.href = 'index.html';
+        } else {
+            document.getElementById('name').innerText = "Hello, " + user.full_name;
+        }
+
+        async function toggleBalance() {
+            const balElement = document.getElementById('bal');
+            const eyeIcon = document.getElementById('eye-icon');
+
+            if (isHidden) {
+                // Fetch the latest balance from the server to ensure accuracy
+                try {
+                    const response = await fetch(`https://funds-5bhq.onrender.com/api/balance/${user.phone}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const actualBalance = Number(data.balance).toLocaleString();
+                        balElement.innerText = "Ksh " + actualBalance;
+                        // Update local storage so other pages have latest info
+                        user.balance = data.balance;
+                        localStorage.setItem('mledger_user', JSON.stringify(user));
+                    } else {
+                        balElement.innerText = "Error";
+                    }
+                } catch (err) {
+                    balElement.innerText = "Offline";
+                }
+                
+                eyeIcon.innerText = "🙈"; // Change icon to closed eyes
+                isHidden = false;
+            } else {
+                // Hide the balance
+                balElement.innerText = "";
+                eyeIcon.innerText = "👁️"; // Change icon to open eye
+                isHidden = true;
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.href = 'index.html';
+        }
     </script>
 </body>
 </html>
