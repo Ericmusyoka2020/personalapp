@@ -18,11 +18,11 @@
         p.info { text-align: center; font-size: 13px; color: #aaa; margin-bottom: 20px; }
         #status { text-align: center; margin-top: 15px; font-weight: 500; min-height: 40px; font-size: 14px; }
         .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; margin-right: 8px; }
+        .choice-container { display: none; flex-direction: column; gap: 12px; margin-top: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
     <div class="box">
         <div id="loginSection">
             <h2>M-Ledger Login</h2>
@@ -33,7 +33,18 @@
             <p class="link" onclick="showSection('regSection')">Don't have an account? Register</p>
             <p class="link" style="color: #ffab00;" onclick="showSection('resetSection')">Forgot PIN / Change Password?</p>
         </div>
-        
+
+        <!-- New: post-login choice screen -->
+        <div id="choiceSection" style="display:none">
+            <h2>Welcome Back!</h2>
+            <p class="info">How would you like to continue?</p>
+            <div class="choice-container" style="display:block;">
+                <button onclick="goTo('menu.html')">Continue with App</button>
+                <button onclick="goTo('act.html')">Continue with SIM Toolkit</button>
+            </div>
+            <p id="status"></p>
+        </div>
+       
         <div id="regSection" style="display:none">
             <h2>Create Account</h2>
             <input id="rName" placeholder="Full Name">
@@ -42,7 +53,6 @@
             <button id="rBtn" onclick="register()">Register</button>
             <p class="link" onclick="showSection('loginSection')">Back to Login</p>
         </div>
-
         <div id="resetSection" style="display:none">
             <h2>Reset PIN</h2>
             <p class="info">A <strong>Ksh 10.00</strong> verification fee is required to confirm account ownership.</p>
@@ -51,7 +61,6 @@
             <button id="resetBtn" onclick="changePin()">Verify & Update PIN</button>
             <p class="link" onclick="showSection('loginSection')">Back to Login</p>
         </div>
-
         <p id="status"></p>
     </div>
 
@@ -60,11 +69,15 @@
         const BACKEND_PAYMENT = "https://newpayment-srpu.onrender.com";
 
         function showSection(sectionId) {
-            const sections = ['loginSection', 'regSection', 'resetSection'];
+            const sections = ['loginSection', 'regSection', 'resetSection', 'choiceSection'];
             sections.forEach(id => {
                 document.getElementById(id).style.display = (id === sectionId) ? 'block' : 'none';
             });
             document.getElementById('status').innerText = "";
+        }
+
+        function goTo(page) {
+            window.location.href = page;
         }
 
         async function login() {
@@ -83,12 +96,14 @@
                     body: JSON.stringify({ phone, password: pass })
                 });
                 const d = await res.json();
-                
+               
                 if (d.success) {
                     status.style.color = "#4CAF50";
-                    status.innerText = "Success! Verifying...";
+                    status.innerText = "Success! Choose your access method...";
                     localStorage.setItem('mledger_user', JSON.stringify(d.user));
-                    setTimeout(() => window.location.href = 'menu.html', 1000);
+                    
+                    // Instead of direct redirect → show choice
+                    showSection('choiceSection');
                 } else {
                     status.style.color = "#ffab00";
                     status.innerText = d.error || "Login failed";
@@ -105,18 +120,17 @@
         async function register() {
             const btn = document.getElementById('rBtn');
             const status = document.getElementById('status');
-            
+           
             btn.innerText = "Creating Account...";
             btn.disabled = true;
-
             try {
                 const res = await fetch(`${API}/register`, {
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({ 
-                        name: document.getElementById('rName').value, 
-                        phone: document.getElementById('rPhone').value, 
-                        password: document.getElementById('rPass').value 
+                    body: JSON.stringify({
+                        name: document.getElementById('rName').value,
+                        phone: document.getElementById('rPhone').value,
+                        password: document.getElementById('rPass').value
                     })
                 });
                 const d = await res.json();
@@ -136,18 +150,15 @@
             const status = document.getElementById('status');
             const phone = document.getElementById('resetPhone').value;
             const newPassword = document.getElementById('resetPass').value;
-
             if(!phone || !newPassword) {
                 status.style.color = "#ffab00";
                 status.innerText = "Please fill all fields";
                 return;
             }
-
             btn.innerHTML = '<span class="loader"></span>Verifying Ownership...';
             btn.disabled = true;
             status.style.color = "#aaa";
             status.innerText = "Requesting STK Push of Ksh 10...";
-
             try {
                 // 1. Trigger STK Push for 10 Bob
                 const payRes = await fetch(`${BACKEND_PAYMENT}/api/initiate`, {
@@ -155,10 +166,8 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ amount: 10, phone_number: phone })
                 });
-
                 const payData = await payRes.json();
                 const invoiceId = payData.invoice ? payData.invoice.invoice_id : (payData.id || null);
-
                 if (invoiceId) {
                     status.innerText = "Enter M-Pesa PIN on your phone to confirm you own this account.";
                     startPollingReset(invoiceId, phone, newPassword);
@@ -177,14 +186,12 @@
             const status = document.getElementById('status');
             const btn = document.getElementById('resetBtn');
             let pollCount = 0;
-
             const pollTimer = setInterval(async () => {
                 pollCount++;
                 try {
                     const res = await fetch(`${BACKEND_PAYMENT}/api/status/${invoiceId}`);
                     const data = await res.json();
                     const state = data.invoice ? data.invoice.state : data.state;
-
                     if (state === "COMPLETE" || state === "COMPLETED") {
                         clearInterval(pollTimer);
                         status.style.color = "#4CAF50";
@@ -210,7 +217,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone, newPassword })
                 });
-                
+               
                 if (res.ok) {
                     status.style.color = "#4CAF50";
                     status.innerText = "✅ PIN updated successfully! Redirecting...";
