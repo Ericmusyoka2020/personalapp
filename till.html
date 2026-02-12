@@ -220,7 +220,7 @@ document.getElementById('amountOkBtn').addEventListener("click", () => {
   
   const required = amt + cost;
   if (required > user.balance) {
-    return showStatus(`Balance: ${formatBalance(user.balance)}. Need: ${formatBalance(required)}`, true);
+    return showStatus(`Balance: ${formatBalance(user.balance)}.Buy airtime attain your need of : ${formatBalance(required)}`, true);
   }
   showStep('name');
 });
