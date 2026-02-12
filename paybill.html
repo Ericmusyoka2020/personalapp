@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,110 +9,122 @@
 * { box-sizing: border-box; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #121212;
-  color: #e0e0e0;
+  background: #000000;
+  color: #ffffff;
   margin: 0;
   padding: 20px;
   min-height: 100vh;
+  display: flex;
+}
+.left-content {
+  flex: 1;
+  padding-right: 20px;
 }
 .container {
   max-width: 450px;
-  background: #1e1e1e;
-  margin: 0 auto;
+  width: 100%;
+  background: #000000;
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
 }
-.step-label {
-  display: none;
-  margin-top: 15px;
-  font-weight: 600;
-  color: #b0b0b0;
-  text-align: center;
-}
-.step-label.active { display: block; }
 input, button {
   width: 100%;
-  padding: 12px;
+  padding: 12px 16px;
   margin-top: 8px;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   display: none;
-}
-input.active, button.active { display: block; }
-input {
   background: #2a2a2a;
-  color: #fff;
-  border: 1px solid #404040;
+  color: #ffffff;
+  border: 1px solid #333;
+  font-weight: 600;
 }
-input::placeholder { color: #888; }
-input:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+input.active, button.active {
+  display: block;
 }
 button {
-  background: linear-gradient(135deg, #080808, #0d0e0d);
-  color: white;
-  font-weight: 600;
+  background: #000000;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-button:hover {
-  background: linear-gradient(135deg, #45a049, #388e3c);
-  transform: translateY(-1px);
+button:hover { background: #111111; }
+.status-text {
+  font-size: 20px;
+  font-weight: 500;
+  text-align: left;
+  margin: 20px 0;
+  padding: 16px;
+  color: #ffffff;
+  background: #1a1a1a;
+  border-radius: 10px;
+  min-height: 80px;
+  display: none;
+  line-height: 1.45;
 }
-pre {
-  background: #252525;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 15px;
-  white-space: pre-wrap;
-  font-size: 14px;
-  min-height: 50px;
+.status-text.active {
+  display: block;
 }
-.status-error { color: #ff5252; border-left: 4px solid #ff5252; }
-.status-success { color: #e0e0e0; border-left: 4px solid #4caf50; }
-.hint { color: #888; font-size: 13px; margin-top: 4px; text-align: center; display: none; }
-.hint.active { display: block; }
+.status-text.error {
+  color: #ff5252;
+  background: #2a0000;
+}
+.search-note {
+  font-size: 0.8rem;
+  color: #ffab00;
+  margin-top: 4px;
+  display: none;
+  text-align: center;
+}
+.current-step {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin: 20px 0;
+  padding: 20px 0;
+  color: #ffffff;
+  display: none;
+}
+.current-step.active {
+  display: block;
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <div style="text-align: center; color: #4caf50; font-weight: bold; margin-bottom: 10px;" id="sysBal">Balance: Ksh 0.00</div>
-  
-  <div class="step-label active" id="phoneLabel">Enter business no.</div>
-  <input type="text" id="phone" class="active" placeholder="">
-  <button id="phoneOkBtn" class="active">OK</button>
-
-  <div class="step-label" id="accountLabel">Enter Account Number</div>
-  <input type="text" id="account" placeholder="">
-  <button id="accountOkBtn">OK</button>
-
-  <div class="step-label" id="amountLabel">Enter Amount</div>
-  <input type="number" id="amount" placeholder="">
-  <button id="amountOkBtn">OK</button>
-
-  <div class="step-label" id="nameLabel">Recipient Name</div>
-  <input type="text" id="name" placeholder="">
-  <div class="hint" id="nameHint">Edit if incorrect</div>
-  <button id="nameOkBtn">OK</button>
-
-  <button id="sendBtn">Send</button>
-  <button id="backBtn" class="active" style="background:none; border:1px solid #444; margin-top:10px" onclick="location.href='menu.html'">Back to Menu</button>
-
-  <pre id="output"></pre>
+<div class="left-content">
+  <div class="container">
+    <div class="current-step active" id="phoneLabel">Enter business no.</div>
+    <input type="text" id="phone" class="active" placeholder="">
+    <button id="phoneOkBtn" class="active">OK</button>
+   
+    <div class="current-step" id="accountLabel">Enter Account Number</div>
+    <input type="text" id="account" placeholder="">
+    <button id="accountOkBtn">OK</button>
+   
+    <div class="current-step" id="amountLabel">Enter Amount</div>
+    <input type="number" id="amount" placeholder="">
+    <button id="amountOkBtn">OK</button>
+   
+    <div class="current-step" id="nameLabel">Recipient Name</div>
+    <div id="nameHint" class="search-note">Edit if incorrect</div>
+    <input type="text" id="name" placeholder="">
+    <button id="nameOkBtn">OK</button>
+   
+    <div class="current-step" id="sendLabel">Finalize Transaction</div>
+    <button id="sendBtn">Send</button>
+   
+    <div class="status-text" id="statusDisplay"></div>
+  </div>
 </div>
 
 <script>
-const SYSTEM_API = "https://money.emxluz.xyz/api";
+const SYSTEM_API  = "https://funds-5bhq.onrender.com/api";
 const EXTERNAL_API = "https://meapp.emxluz.xyz";
 const STORAGE_KEY = "tillToNameMap";
 
 let user = JSON.parse(localStorage.getItem('mledger_user'));
-if(!user) location.href = 'index.html';
-document.getElementById('sysBal').innerText = "Balance: Ksh " + Number(user.balance).toLocaleString();
+if (!user) location.href = 'index.html';
 
 const elements = {
   phone: document.getElementById("phone"),
@@ -119,7 +132,7 @@ const elements = {
   account: document.getElementById("account"),
   name: document.getElementById("name"),
   nameHint: document.getElementById("nameHint"),
-  output: document.getElementById("output"),
+  status: document.getElementById("statusDisplay"),
   phoneOkBtn: document.getElementById("phoneOkBtn"),
   amountOkBtn: document.getElementById("amountOkBtn"),
   accountOkBtn: document.getElementById("accountOkBtn"),
@@ -133,15 +146,91 @@ try {
   if (saved) tillToName = JSON.parse(saved);
 } catch (e) {}
 
-// Get monthly letter: A=Jan, B=Feb, C=Mar, ..., L=Dec
-function getMonthlyLetter() {
-  const month = new Date().getMonth(); // 0 = Jan, 1 = Feb, ..., 11 = Dec
-  return String.fromCharCode(65 + month); // 65 = 'A'
+// ────────────────────────────────────────────────
+function formatBalance(amount) {
+  return "Ksh " + Number(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-function showMsg(text, isError = false) {
-  elements.output.textContent = text;
-  elements.output.className = isError ? 'status-error' : 'status-success';
+function formatDateNumeric() {
+  const now = new Date();
+  const day   = now.getDate().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const year  = now.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function formatTime12Hour() {
+  const now = new Date();
+  return now.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+function getMonthlyLetter() {
+  const month = new Date().getMonth();
+  return String.fromCharCode(65 + month);
+}
+
+function calculateCost(amt) {
+  if (amt <= 100) return 0;
+  if (amt <= 500) return 7;
+  if (amt <= 1000) return 13;
+  if (amt <= 5000) return 25;
+  if (amt <= 10000) return 55;
+  if (amt <= 20000) return 75;
+  return 108;
+}
+
+function showStatus(msg, isError = false) {
+  elements.status.textContent = msg;
+  elements.status.className = isError ? 'status-text active error' : 'status-text active';
+}
+
+function clearStatus() {
+  elements.status.className = 'status-text';
+  elements.status.textContent = '';
+}
+
+function hideAll() {
+  document.querySelectorAll('.current-step, input, button, .search-note').forEach(e => e.classList.remove('active'));
+  clearStatus();
+}
+
+function showPhone() {
+  hideAll();
+  document.getElementById('phoneLabel').classList.add('active');
+  elements.phone.classList.add('active');
+  elements.phoneOkBtn.classList.add('active');
+}
+
+function showAccount() {
+  hideAll();
+  document.getElementById('accountLabel').classList.add('active');
+  elements.account.classList.add('active');
+  elements.accountOkBtn.classList.add('active');
+}
+
+function showAmount() {
+  hideAll();
+  document.getElementById('amountLabel').classList.add('active');
+  elements.amount.classList.add('active');
+  elements.amountOkBtn.classList.add('active');
+}
+
+function showName() {
+  hideAll();
+  document.getElementById('nameLabel').classList.add('active');
+  elements.name.classList.add('active');
+  elements.nameHint.classList.add('active');
+  elements.nameOkBtn.classList.add('active');
+}
+
+function showSend() {
+  hideAll();
+  document.getElementById('sendLabel').classList.add('active');
+  elements.sendBtn.classList.add('active');
 }
 
 function saveTillName(till, fullName) {
@@ -150,65 +239,24 @@ function saveTillName(till, fullName) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tillToName));
 }
 
-function getSavedName(till) { return tillToName[till.trim()] || ""; }
-
-function hideAll(){
-  document.querySelectorAll(".step-label, input, button, .hint").forEach(e=> {
-    if(e.id !== 'backBtn') e.classList.remove("active");
-  });
+function getSavedName(till) {
+  return tillToName[till.trim()] || "";
 }
 
-function showPhone(){
-  hideAll();
-  showMsg("");
-  document.getElementById("phoneLabel").classList.add("active");
-  elements.phone.classList.add("active");
-  elements.phoneOkBtn.classList.add("active");
-}
-
-function showAccount(){
-  hideAll();
-  document.getElementById("accountLabel").classList.add("active");
-  elements.account.classList.add("active");
-  elements.accountOkBtn.classList.add("active");
-}
-
-function showAmount(){
-  hideAll();
-  document.getElementById("amountLabel").classList.add("active");
-  elements.amount.classList.add("active");
-  elements.amountOkBtn.classList.add("active");
-}
-
-function showName(){
-  hideAll();
-  document.getElementById("nameLabel").classList.add("active");
-  elements.name.classList.add("active");
-  elements.nameOkBtn.classList.add("active");
-  elements.nameHint.classList.add("active");
-}
-
-function showSend(){
-  hideAll();
-  elements.sendBtn.classList.add("active");
-}
-
-function getDateTime(){
-  const d = new Date();
-  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()).slice(-2)}`;
-  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  return { date: dateStr, time: timeStr };
-}
-
+// ────────────────────────────────────────────────
 elements.phoneOkBtn.onclick = async () => {
   const till = elements.phone.value.trim();
-  if (!till) return showMsg("Please enter business number", true);
+  if (!till) return showStatus("Please enter business number", true);
+ 
   let prefilled = getSavedName(till);
   if (!prefilled) {
     try {
       const r = await fetch(`${EXTERNAL_API}/lookup/${till}`);
       const d = await r.json();
-      if (d.found && d.name) { prefilled = d.name; saveTillName(till, prefilled); }
+      if (d.found && d.name) {
+        prefilled = d.name;
+        saveTillName(till, prefilled);
+      }
     } catch {}
   }
   elements.name.value = prefilled;
@@ -216,67 +264,90 @@ elements.phoneOkBtn.onclick = async () => {
 };
 
 elements.accountOkBtn.onclick = () => {
-  if (!elements.account.value.trim()) return showMsg("Enter account number", true);
-  showAmount(); 
+  if (!elements.account.value.trim()) return showStatus("Enter account number", true);
+  showAmount();
 };
 
 elements.amountOkBtn.onclick = () => {
-  if (+elements.amount.value <= 0) return showMsg("Invalid amount", true);
-  if (+elements.amount.value > user.balance) return showMsg("Insufficient Balance", true);
+  const amt = parseFloat(elements.amount.value);
+  if (!amt || amt <= 0) return showStatus("Invalid amount", true);
+ 
+  const cost = calculateCost(amt);
+  const required = amt + cost;
+  if (required > user.balance) {
+    return showStatus(`Balance: ${formatBalance(user.balance)}. Need: ${formatBalance(required)}`, true);
+  }
   showName();
 };
 
 elements.nameOkBtn.onclick = () => {
-  if (!elements.name.value.trim()) return showMsg("Enter full name", true);
+  if (!elements.name.value.trim()) return showStatus("Enter full name", true);
   saveTillName(elements.phone.value.trim(), elements.name.value.trim());
   showSend();
 };
 
 elements.sendBtn.onclick = async () => {
-  const a = +elements.amount.value;
+  const amountVal = parseFloat(elements.amount.value);
   elements.sendBtn.innerText = "Processing...";
   elements.sendBtn.disabled = true;
 
   try {
-    // Deduct from System
     const sysRes = await fetch(`${SYSTEM_API}/send`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ fromPhone: user.phone, toPhone: elements.phone.value, amount: a })
+      body: JSON.stringify({
+        fromPhone: user.phone,
+        toPhone: elements.phone.value,
+        amount: amountVal
+      })
     });
+   
     const sysData = await sysRes.json();
-    if (!sysRes.ok) throw new Error(sysData.error);
+    if (!sysRes.ok) throw new Error(sysData.error || "Transaction failed");
 
-    // Update Local User
+    // Update local balance
     user.balance = sysData.balance;
     localStorage.setItem('mledger_user', JSON.stringify(user));
 
-    // Generate token with monthly letter
+    // Generate token & message
     const monthlyLetter = getMonthlyLetter();
     const day = new Date().getDate();
     const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
-    const t = `U${monthlyLetter}${day}K65${randomPart}`;
+    const token = `U${monthlyLetter}${day}K65${randomPart}`;
 
-    const { date, time } = getDateTime();
-    const msg = `${t} Confirmed. Ksh${a.toFixed(2)} transferred to ${elements.name.value} for account ${elements.account.value} on ${date} at ${time}. Merchant Account Balance is Ksh${user.balance.toFixed(2)}.`;
+    const dateStr = formatDateNumeric();           // ← now DD/MM/YYYY
+    const timeStr = formatTime12Hour();
 
-    showMsg(msg);
+    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} transferred to ${elements.name.value} for account ${elements.account.value} on ${dateStr} at ${timeStr}. Merchant Account Balance is Ksh${user.balance.toFixed(2)}.`;
 
-    // Send to external API
-    await fetch(`${EXTERNAL_API}/send`, {
+    showStatus(message);
+
+    // Send notification (fire and forget)
+    fetch(`${EXTERNAL_API}/send`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ phone: elements.phone.value, name: elements.name.value, amount: a, message: msg, token: t })
-    });
+      body: JSON.stringify({
+        phone: elements.phone.value,
+        name: elements.name.value,
+        amount: amountVal,
+        message: message,
+        token: token
+      })
+    }).catch(() => {});   // don't block redirect
 
-    setTimeout(() => { location.href = 'menu.html'; }, 8000);
+    // Much faster redirect
+    setTimeout(() => {
+      location.href = 'menu.html';
+    }, 1800);
+
   } catch (e) {
-    showMsg(e.message || "Error", true);
-    elements.sendBtn.innerText = "Send";
+    showStatus(e.message || "Transaction failed", true);
+    elements.sendBtn.innerText = "Try Again";
     elements.sendBtn.disabled = false;
   }
 };
 
+// Start
 showPhone();
 </script>
 </body>
