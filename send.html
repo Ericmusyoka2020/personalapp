@@ -269,7 +269,7 @@ elements.sendBtn.addEventListener("click", async () => {
     const dateStr = formatNumericDate();   // ← now DD/MM/YYYY
     const timeStr = formatTime12Hour();
 
-    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal} ${phoneVal} on ${dateStr} at ${timeStr}. New M-PESA balance is Ksh${user.balance.toFixed(2)}.Transaction Cost,Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,777.00.Earn interest daily on Ziidi MMF,Dial*334#
+    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal} ${phoneVal} on ${dateStr} at ${timeStr}. New M-PESA balance is Ksh${user.balance.toFixed(2)}.Transaction Cost,Ksh${cost.toFixed(2)}.Amount you can transact within the day is 499,777.00.Earn interest daily on Ziidi MMF,Dial*334#
 .`;
 
     showStatus(message);
