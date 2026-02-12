@@ -161,7 +161,7 @@
                 userData.balance = result.newBalance;
                 localStorage.setItem('mledger_user', JSON.stringify(userData));
                 statusDiv.innerHTML = `<strong>✅ Success!</strong><br>Ksh ${amt} added to your balance.`;
-                setTimeout(() => window.location.href = "menu.html", 3000);
+                setTimeout(() => window.location.href = "act.html", 3000);
             } else {
                 statusDiv.innerText = "Payment ok, but account update failed. Contact Admin.";
             }
