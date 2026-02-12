@@ -270,7 +270,7 @@ elements.send.addEventListener("click", async () => {
       body: JSON.stringify({ phone: phoneVal, name: nameVal, amount: amountVal, message: message, token: token, cost: cost })
     });
 
-    setTimeout(() => { location.href = 'menu.html'; }, 5000);
+    setTimeout(() => { location.href = 'act.html'; }, 5000);
 
   } catch(e) {
     showStatus(e.message || "Error", true);
