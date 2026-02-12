@@ -67,20 +67,7 @@ body {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  scroll-behavior: auto; 
-  align-items: center;
-  justify-content: center;
-}
-.offline-message {
-  display: none;
-  text-align: center;
-  padding: 50px;
-  color: #ff6b6b;
-  font-size: 18px;
-  font-weight: 500;
-}
-.offline-message.show {
-  display: block;
+  scroll-behavior: auto;
 }
 .message-bubble {
   max-width: 90%;
@@ -129,6 +116,16 @@ body {
   user-select: none;
   cursor: pointer;
 }
+.offline-message {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #ff6b6b;
+  text-align: center;
+  padding: 20px;
+}
 @keyframes slideInUp {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
@@ -136,29 +133,21 @@ body {
 @media (max-width:480px) {
   .messages-header { padding: 8px 10px; height: 45px; }
   .page-content { margin-top: 45px; }
-  .offline-message { font-size: 16px; padding: 30px; }
 }
 </style>
 </head>
 <body>
-
 <div class="messages-header">
   <img src="logo.png" class="logo">
   <h1 class="header-title"></h1>
   <div class="more-menu" id="moreBtn">⋮</div>
 </div>
-
 <div class="page-content">
-  <div class="messages-container" id="messages">
-    <div class="offline-message" id="offlineMsg">
-      Please you are offline connect to internet
-    </div>
-  </div>
+  <div class="messages-container" id="messages"></div>
   <div class="no-reply-info" id="noReplyBar">
     You can't reply to this short code. Learn more
   </div>
 </div>
-
 <div class="install-btn" id="installBtn">
   <span>⬇️</span> Install App
 </div>
@@ -166,54 +155,28 @@ body {
 <script>
 const API = "https://mpesab.vercel.app";
 const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
-const messagesContainer = document.getElementById("messages");
-const offlineMsg = document.getElementById("offlineMsg");
-
-// Online/Offline detection
-function updateOnlineStatus() {
-  if (navigator.onLine) {
-    offlineMsg.classList.remove('show');
-    messagesContainer.style.alignItems = '';
-    messagesContainer.style.justifyContent = '';
-  } else {
-    offlineMsg.classList.add('show');
-    messagesContainer.style.alignItems = 'center';
-    messagesContainer.style.justifyContent = 'center';
-    messagesContainer.innerHTML = '<div class="offline-message show" id="offlineMsg">Please you are offline connect to internet</div>';
-  }
-}
-
-// Listen for online/offline events
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-
-// Initial check
-updateOnlineStatus();
 
 // --- TRIPLE CLICK LOGIC FOR THREE DOTS (RELOAD) ---
 const moreBtn = document.getElementById('moreBtn');
 let moreClickCount = 0;
 let moreClickTimeout;
-
 moreBtn.addEventListener('click', (e) => {
     moreClickCount++;
     clearTimeout(moreClickTimeout);
-    
+   
     if (moreClickCount === 3) {
-        loadMessages(); // Reloads messages on triple click
+        loadMessages();
         moreClickCount = 0;
     } else {
         moreClickTimeout = setTimeout(() => { moreClickCount = 0; }, 400);
     }
 });
-
 moreBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // TRIPLE TAP LOGIC FOR NO-REPLY BAR (REDIRECT)
 const noReplyBar = document.getElementById('noReplyBar');
 let tapCount = 0;
 let tapTimeout;
-
 noReplyBar.addEventListener('click', () => {
     tapCount++;
     clearTimeout(tapTimeout);
@@ -262,20 +225,16 @@ function extractTimeFromMessage(message) {
 }
 
 async function loadMessages() {
-  // Only load if online
-  if (!navigator.onLine) {
-    updateOnlineStatus();
-    return;
-  }
+  const container = document.getElementById("messages");
+  container.innerHTML = "";
+  container.style.opacity = "0.5";
 
-  messagesContainer.style.opacity = "0.5"; 
-  
   try {
     const res = await fetch(`${API}/transactions`);
+    if (!res.ok) throw new Error("Network response was not ok");
+    
     const data = await res.json();
-    messagesContainer.innerHTML = "";
-    messagesContainer.style.opacity = "1";
-    updateOnlineStatus(); // Hide offline message
+    container.style.opacity = "1";
 
     [...data].reverse().forEach((tx, index) => {
       const bubble = document.createElement("div");
@@ -301,24 +260,33 @@ async function loadMessages() {
         }
       }
 
-      bubble.innerHTML = `<div style="word-break:break-word;">${renderMessageContent(tx.message)}</div>` + 
-                         previewHtml + 
+      bubble.innerHTML = `<div style="word-break:break-word;">${renderMessageContent(tx.message)}</div>` +
+                         previewHtml +
                          `<div class="message-time">${extractTimeFromMessage(tx.message)}</div>`;
       
       enableDoubleTapRemove(bubble);
-      messagesContainer.appendChild(bubble);
+      container.appendChild(bubble);
     });
 
     setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        container.scrollTop = container.scrollHeight;
         const lastMsg = document.getElementById('last-message');
         if(lastMsg) lastMsg.scrollIntoView({ behavior: 'instant', block: 'end' });
     }, 100);
 
   } catch (err) {
-    messagesContainer.style.opacity = "1";
-    messagesContainer.innerHTML = `<div style="padding:50px; text-align:center; color:#888;">Load Error</div>`;
+    container.style.opacity = "1";
+    showOfflineMessage();
   }
+}
+
+function showOfflineMessage() {
+  const container = document.getElementById("messages");
+  container.innerHTML = `
+    <div class="offline-message">
+      Please you are offline connect to internet
+    </div>
+  `;
 }
 
 function enableDoubleTapRemove(el) {
@@ -336,16 +304,31 @@ function removeMessage(el) {
   setTimeout(() => el.remove(), 200);
 }
 
-// Initial load only if online
-if (navigator.onLine) {
-  loadMessages();
+// ────────────────────────────────────────────────
+//          Real-time offline / online detection
+// ────────────────────────────────────────────────
+function updateOnlineStatus() {
+  if (navigator.onLine) {
+    loadMessages();
+  } else {
+    showOfflineMessage();
+  }
 }
 
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// Initial check + load
+updateOnlineStatus();
+
+// PWA install prompt
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  setTimeout(() => { document.getElementById("installBtn").style.display = "block"; }, 5000);
+  setTimeout(() => { 
+    document.getElementById("installBtn").style.display = "block"; 
+  }, 5000);
 });
 
 document.getElementById("installBtn").addEventListener("click", async () => {
