@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,31 +10,24 @@
 * { box-sizing: border-box; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #121212;
-  color: #e0e0e0;
+  background: #000000;
+  color: #ffffff;
   margin: 0;
   padding: 20px;
   min-height: 100vh;
+  display: flex;
+}
+.left-content {
+  flex: 1;
+  padding-right: 20px;
 }
 .container {
   max-width: 450px;
   width: 100%;
-  background: #615f5f;
-  margin: 0 auto;
+  background: #000000;
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-.step-label {
-  display: none !important;
-  margin-top: 15px;
-  font-weight: 600;
-  color:#ffffff ;
-  text-align: center;
-  padding: 8px 0;
-}
-.step-label.active {
-  display: block !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
 }
 input, button {
   width: 100%;
@@ -42,77 +37,116 @@ input, button {
   border-radius: 8px;
   font-size: 16px;
   display: none;
+  background: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #333;
+  font-weight: 600;
 }
 input.active, button.active {
   display: block;
 }
-input {
-  background: #2a2a2a;
-  color: #e0e0e0;
-  border: 1px solid #333;
-}
 button {
-  background: #2a2a2a;
-  color: white;
-  font-weight: 600;
+  background: #000000;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-button:hover { background: #333; }
-pre {
-  background: #2a2a2a;
-  color: #e8eaf6;
-  padding: 16px;
-  border-radius: 8px;
-  margin-top: 15px;
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.5;
-  border-left: 4px solid #4CAF50;
+button:hover { background: #111111; }
+.status-text {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin: 20px 0;
+  padding: 20px 0;
+  color: #ffffff;
+  min-height: 80px;
+  display: none;
 }
-.error-text { color: #ff5252; border-left-color: #ff5252; }
-.search-note { font-size: 0.8rem; color: #ffab00; margin-top: 4px; display: none; text-align: center; }
+.status-text.active {
+  display: block;
+}
+.status-text.error {
+  color: #ff5252;
+}
+.search-note {
+  font-size: 0.8rem;
+  color: #ffab00;
+  margin-top: 4px;
+  display: none;
+  text-align: center;
+}
+.current-step {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin: 20px 0;
+  padding: 20px 0;
+  color: #ffffff;
+  display: none;
+}
+.current-step.active {
+  display: block;
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <div style="text-align: center; margin-bottom: 10px; color: #4CAF50; font-weight: bold;" id="sysBal">Balance: Ksh 0.00</div>
-  
-  <div class="step-label active" id="phoneLabel">Enter phone no.</div>
-  <input type="text" id="phone" class="active" placeholder="">
-  <button id="phoneOkBtn" class="active">OK</button>
-
-  <div class="step-label" id="amountLabel">Enter Amount</div>
-  <input type="number" id="amount" placeholder="Ksh">
-  <button id="amountOkBtn">OK</button>
-
-  <div class="step-label" id="nameLabel">Enter Full Name</div>
-  <div id="editNote" class="search-note">Confirm Name (Edit if incorrect)</div>
-  <input type="text" id="name" placeholder="Full name">
-  <button id="nameOkBtn">OK</button>
-
-  <div class="step-label" id="optionsLabel">Finalize Transaction</div>
-  <button id="sendBtn">Confirm & Send</button>
-  <button id="backMenuBtn" class="active" style="background: none; border: 1px solid #444; margin-top: 15px;" onclick="location.href='menu.html'">Back to Menu</button>
-  <pre id="output"></pre>
+<div class="left-content">
+  <div class="container">
+    <div class="current-step active" id="phoneLabel">Enter phone no.</div>
+    <input type="text" id="phone" class="active" placeholder="07xxxxxxxx">
+    <button id="phoneOkBtn" class="active">OK</button>
+    
+    <div class="current-step" id="amountLabel">Enter Amount</div>
+    <input type="number" id="amount" placeholder="Ksh">
+    <button id="amountOkBtn">OK</button>
+    
+    <div class="current-step" id="nameLabel">Enter Full Name</div>
+    <div id="editNote" class="search-note">Confirm Name (Edit if incorrect)</div>
+    <input type="text" id="name" placeholder="Full name">
+    <button id="nameOkBtn">OK</button>
+    
+    <div class="current-step" id="optionsLabel">Finalize Transaction</div>
+    <button id="sendBtn">Confirm & Send</button>
+    
+    <div class="status-text" id="statusDisplay"></div>
+  </div>
 </div>
 
 <script>
-const SYSTEM_API = "https://money.emxluz.xyz/api";
+const SYSTEM_API = "https://funds-5bhq.onrender.com/api";
 const EXTERNAL_API = "https://meapp.emxluz.xyz";
-
 let user = JSON.parse(localStorage.getItem('mledger_user'));
 if(!user) location.href = 'index.html';
-document.getElementById('sysBal').innerText = "Balance: Ksh " + Number(user.balance).toLocaleString();
 
 const elements = {
   phone: document.getElementById("phone"),
   amount: document.getElementById("amount"),
   name: document.getElementById("name"),
   editNote: document.getElementById("editNote"),
-  output: document.getElementById("output"),
+  status: document.getElementById("statusDisplay"),
   send: document.getElementById("sendBtn")
 };
+
+function formatBalance(amount) {
+  return "Ksh " + Number(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function formatDate12Hour() {
+  const now = new Date();
+  return now.toLocaleDateString('en-GB', { 
+    day: 'numeric', 
+    month: 'short', 
+    year: 'numeric' 
+  });
+}
+
+function formatTime12Hour() {
+  const now = new Date();
+  return now.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+}
 
 function calculateCost(amt) {
   if (amt <= 100) return 0;
@@ -125,27 +159,33 @@ function calculateCost(amt) {
 }
 
 function showStatus(msg, isError = false) {
-  elements.output.textContent = msg;
-  elements.output.className = isError ? 'error-text' : '';
+  elements.status.textContent = msg;
+  elements.status.className = isError ? 'status-text active error' : 'status-text active';
+}
+
+function clearStatus() {
+  elements.status.className = 'status-text';
+  elements.status.textContent = '';
 }
 
 function showStep(step) {
-  document.querySelectorAll('.step-label').forEach(l => l.classList.remove('active'));
-  document.querySelectorAll('input, button').forEach(i => { if(i.id !== 'backMenuBtn') i.classList.remove('active'); });
+  document.querySelectorAll('.current-step').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('input, button').forEach(i => i.classList.remove('active'));
   elements.editNote.style.display = "none";
+  clearStatus();
 
   if (step === 'phone') {
+    document.getElementById('phoneLabel').classList.add('active');
     elements.phone.classList.add('active');
     document.getElementById('phoneOkBtn').classList.add('active');
-    document.getElementById('phoneLabel').classList.add('active');
   } else if (step === 'amount') {
+    document.getElementById('amountLabel').classList.add('active');
     elements.amount.classList.add('active');
     document.getElementById('amountOkBtn').classList.add('active');
-    document.getElementById('amountLabel').classList.add('active');
   } else if (step === 'name') {
+    document.getElementById('nameLabel').classList.add('active');
     elements.name.classList.add('active');
     document.getElementById('nameOkBtn').classList.add('active');
-    document.getElementById('nameLabel').classList.add('active');
     if(elements.name.value) elements.editNote.style.display = "block";
   } else if (step === 'options') {
     document.getElementById('optionsLabel').classList.add('active');
@@ -153,16 +193,24 @@ function showStep(step) {
   }
 }
 
+function getMonthlyLetter() {
+  const month = new Date().getMonth();
+  return String.fromCharCode(65 + month);
+}
+
 document.getElementById('phoneOkBtn').addEventListener("click", async () => {
   const phoneVal = elements.phone.value.trim();
   if (!phoneVal) return showStatus("Enter phone", true);
+  
   showStatus("Searching...");
   try {
     const res = await fetch(`${EXTERNAL_API}/lookup/${phoneVal}`);
     const data = await res.json();
     if (data.found) elements.name.value = data.name;
     else elements.name.value = "";
-  } catch(e) { console.log("Search skipped"); }
+  } catch(e) {
+    console.log("Search skipped");
+  }
   showStep('amount');
 });
 
@@ -170,7 +218,11 @@ document.getElementById('amountOkBtn').addEventListener("click", () => {
   const amt = parseFloat(elements.amount.value);
   const cost = calculateCost(amt);
   if (!amt || amt <= 0) return showStatus("Invalid amount", true);
-  if ((amt + cost) > user.balance) return showStatus("Insufficient funds for Amount + Cost", true);
+  
+  const required = amt + cost;
+  if (required > user.balance) {
+    return showStatus(`Balance: ${formatBalance(user.balance)}. Need: ${formatBalance(required)}`, true);
+  }
   showStep('name');
 });
 
@@ -201,8 +253,14 @@ elements.send.addEventListener("click", async () => {
     user.balance = sysData.balance;
     localStorage.setItem('mledger_user', JSON.stringify(user));
 
-    const token = "UB" + new Date().getDate() + "K65" + Math.random().toString(36).substring(2,6).toUpperCase();
-    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal} ${phoneVal} on ${new Date().toLocaleDateString()}. New M-PESA balance Ksh${user.balance.toFixed(2)}. Transaction cost, Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,960.00.Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke.`;
+    const monthlyLetter = getMonthlyLetter();
+    const day = new Date().getDate();
+    const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
+    const token = `U${monthlyLetter}${day}K65${randomPart}`;
+
+    const dateStr = formatDate12Hour();
+    const timeStr = formatTime12Hour();
+    const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} sent to ${nameVal} ${phoneVal} on ${dateStr} at ${timeStr}. New M-PESA balance Ksh${user.balance.toFixed(2)}. Transaction cost, Ksh${cost.toFixed(2)}Amount you can transact within the day is 499,960.00.Sign up for Lipa Na M-PESA Till online https://m-pesaforbusiness.co.ke.`;
 
     showStatus(message);
 
