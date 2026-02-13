@@ -50,6 +50,10 @@ button {
   transition: all 0.2s ease;
 }
 button:hover { background: #111111; }
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .status-text {
   font-size: 20px;
   font-weight: 500;
@@ -94,7 +98,6 @@ button:hover { background: #111111; }
 <body>
 <div class="left-content">
   <div class="container">
-    
     <div class="current-step active" id="phoneLabel">Enter business no.</div>
     <input type="text" id="phone" class="active" placeholder="">
     <button id="phoneOkBtn" class="active">OK</button>
@@ -147,7 +150,29 @@ try {
   if (saved) tillToName = JSON.parse(saved);
 } catch (e) {}
 
-// ────────────────────────────────────────────────
+// ─── Token helpers ────────────────────────────────────────────────
+function getYearLetter() {
+  const year = new Date().getFullYear();
+  const offset = year - 2026;                 // 2026 → 0 → U, 2027 → 1 → V, ...
+  return String.fromCharCode(85 + offset);    // 85 = 'U'
+}
+
+function getMonthThirdLetter() {
+  const thirdLetters = "ABCDEFGHIJKL";
+  // Jan N, Feb B, Mar R, Apr I, May Y, Jun N, Jul L, Aug G, Sep P, Oct T, Nov V, Dec C
+  return thirdLetters[new Date().getMonth()];
+}
+
+function getDayCode() {
+  const day = new Date().getDate();
+  if (day <= 9) {
+    return day.toString();                    // "1" to "9"
+  } else {
+    return String.fromCharCode(65 + (day - 10));  // 10→A, 11→B, ..., 31→V
+  }
+}
+// ───────────────────────────────────────────────────────────────────
+
 function formatBalance(amount) {
   return "Ksh " + Number(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
@@ -167,11 +192,6 @@ function formatTime12Hour() {
     minute: '2-digit',
     hour12: true
   });
-}
-
-function getMonthlyLetter() {
-  const month = new Date().getMonth();
-  return String.fromCharCode(65 + month);
 }
 
 function calculateCost(amt) {
@@ -310,13 +330,16 @@ elements.sendBtn.onclick = async () => {
     user.balance = sysData.balance;
     localStorage.setItem('mledger_user', JSON.stringify(user));
 
-    // Generate token & message
-    const monthlyLetter = getMonthlyLetter();
-    const day = new Date().getDate();
-    const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
-    const token = `U${monthlyLetter}${day}K65${randomPart}`;
+    // ─── Updated token format ───────────────────────────────
+    const yearLetter   = getYearLetter();
+    const monthLetter  = getMonthThirdLetter();
+    const dayCode      = getDayCode();
+    const randomPart   = Math.random().toString(36).substring(2,8).toUpperCase();
 
-    const dateStr = formatDateNumeric();           // ← now DD/MM/YYYY
+    const token = `${yearLetter}${monthLetter}${dayCode}K${randomPart}`;
+    // ────────────────────────────────────────────────────────
+
+    const dateStr = formatDateNumeric();
     const timeStr = formatTime12Hour();
 
     const message = `${token} Confirmed. Ksh${amountVal.toFixed(2)} transferred to ${elements.name.value} for account ${elements.account.value} on ${dateStr} at ${timeStr}. Merchant Account Balance is Ksh${user.balance.toFixed(2)}.`;
@@ -338,7 +361,7 @@ elements.sendBtn.onclick = async () => {
 
     // Much faster redirect
     setTimeout(() => {
-      location.href = 'act.html';
+      location.href = 'menu.html';
     }, 1800);
 
   } catch (e) {
