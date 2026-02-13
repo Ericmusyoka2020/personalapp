@@ -264,8 +264,8 @@ elements.sendBtn.addEventListener("click", async () => {
     // Generate confirmation
     const monthlyLetter = getMonthlyLetter();
     const day = new Date().getDate();
-    const randomPart = Math.random().toString(36).substring(2,6).toUpperCase();
-    const token = `U${monthlyLetter}${day}K65${randomPart}`;
+    const randomPart = Math.random().toString(36).substring(2,8).toUpperCase();
+    const token = `U${monthlyLetter}${day}K${randomPart}`;
 
     const dateStr = formatNumericDate();   // ← now DD/MM/YYYY
     const timeStr = formatTime12Hour();
