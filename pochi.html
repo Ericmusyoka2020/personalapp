@@ -237,7 +237,7 @@ elements.amountOkBtn.addEventListener("click", () => {
   const cost = calculateCost(amt);
   const required = amt + cost;
   if (required > user.balance) {
-    return showStatus(`Balance airtime you have: ${formatBalance(user.balance)}\nNeeded amount to transcat : ${formatBalance(required)}Please buy airtime`, true);
+    return showStatus(`Balance airtime you have: ${formatBalance(user.balance)}\nNeeded amount to transcat : ${formatBalance(required)} Please buy airtime`, true);
   }
   showStep('name');
 });
