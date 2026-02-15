@@ -301,7 +301,7 @@ elements.amountOkBtn.onclick = () => {
     const totalRequired = amt + fee;
 
     if (totalRequired > user.balance) {
-      return showStatus(`Balance airtime: ${formatBalance(user.balance)}. Airtime needed for transcation to be done: ${formatBalance(totalRequired)} (incl. fee)`, true);
+      return showStatus(`Balance airtime: ${formatBalance(user.balance)}. Airtime needed for transcation to be done: ${formatBalance(totalRequired)} Please buy airtime to complete transcation (incl. fee)`, true);
     }
     showName();
 };
