@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,13 +195,11 @@ function extractFirstUrl(text) {
   url = url.replace(/[.,!?;)\]}>]+$/g, '');
   return url;
 }
-
 function isMpesaRelatedLink(url) {
   if (!url) return false;
   const lower = url.toLowerCase();
   return lower.includes('mpesa') || lower.includes('safaricom');
 }
-
 function getFaviconUrl(url) {
   if (!url) return null;
   try {
@@ -210,7 +207,6 @@ function getFaviconUrl(url) {
     return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
   } catch { return null; }
 }
-
 function renderMessageContent(text) {
   let safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return safe.replace(urlRegex, (match) => {
@@ -218,20 +214,16 @@ function renderMessageContent(text) {
     return `<a href="${full}" target="_blank" rel="noopener noreferrer" style="color:#60a5fa; text-decoration:underline;">${match}</a>`;
   });
 }
-
 function extractTimeFromMessage(message) {
   const match = message.match(/at (\d{1,2}:\d{2} (?:AM|PM))/i);
   return match ? match[1] : new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 }
-
 function createMessageBubble(tx, isLast) {
   const bubble = document.createElement("div");
   bubble.className = "message-bubble";
   if (isLast) bubble.id = "last-message";
-
   const url = extractFirstUrl(tx.message);
   let previewHtml = '';
-
   if (url) {
     if (isMpesaRelatedLink(url)) {
       previewHtml = `<div style="margin: 8px -14px -10px -14px; border-radius: 0 0 18px 18px; overflow: hidden; background: #00A859; width: calc(100% + 28px);">
@@ -247,15 +239,12 @@ function createMessageBubble(tx, isLast) {
       }
     }
   }
-
   bubble.innerHTML = `<div style="word-break:break-word;">${renderMessageContent(tx.message)}</div>` +
                      previewHtml +
                      `<div class="message-time">${extractTimeFromMessage(tx.message)}</div>`;
-
   enableDoubleTapRemove(bubble);
   return bubble;
 }
-
 function enableDoubleTapRemove(el) {
   let lastTap = 0;
   el.addEventListener("touchend", (e) => {
@@ -265,34 +254,28 @@ function enableDoubleTapRemove(el) {
   });
   el.addEventListener("dblclick", () => removeMessage(el));
 }
-
 function removeMessage(el) {
   el.classList.add("hide");
   setTimeout(() => el.remove(), 200);
 }
-
 function renderMessages(messages) {
   const container = document.getElementById("messages");
   container.innerHTML = "";
-
   if (messages.length === 0) {
     container.innerHTML = `<div class="offline-message">No messages available</div>`;
     return;
   }
-
   messages.forEach((tx, index) => {
     const isLast = index === messages.length - 1;
     const bubble = createMessageBubble(tx, isLast);
     container.appendChild(bubble);
   });
-
   setTimeout(() => {
     container.scrollTop = container.scrollHeight;
     const lastMsg = document.getElementById('last-message');
     if (lastMsg) lastMsg.scrollIntoView({ behavior: 'instant', block: 'end' });
   }, 100);
 }
-
 function showOfflineMessage() {
   const container = document.getElementById("messages");
   container.innerHTML = `
@@ -301,32 +284,23 @@ function showOfflineMessage() {
     </div>
   `;
 }
-
 async function loadMessages() {
   const container = document.getElementById("messages");
   container.innerHTML = "";
   container.style.opacity = "0.5";
-
   try {
     const res = await fetch(`${API}/transactions`);
     if (!res.ok) throw new Error("Network response was not ok");
-
     const data = await res.json();
-    // Save to localStorage
     localStorage.setItem("cached_transactions", JSON.stringify(data));
-
     container.style.opacity = "1";
     renderMessages(data.reverse());
-
   } catch (err) {
-    // Try cache
     const cached = localStorage.getItem("cached_transactions");
     if (cached) {
       const data = JSON.parse(cached);
       container.style.opacity = "1";
       renderMessages(data.reverse());
-
-      // Show offline notice at top
       const notice = document.createElement("div");
       notice.style.padding = "10px 14px";
       notice.style.background = "#422c00";
@@ -344,16 +318,13 @@ async function loadMessages() {
     }
   }
 }
-
-// ─── ONLINE / OFFLINE DETECTION ───
 function updateOnlineStatus() {
   if (navigator.onLine) {
     loadMessages();
   } else {
-    loadMessages(); // will fall back to cache or show offline
+    loadMessages(); // falls back to cache or offline
   }
 }
-
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
@@ -369,7 +340,6 @@ window.addEventListener("beforeinstallprompt", (e) => {
     document.getElementById("installBtn").style.display = "block";
   }, 5000);
 });
-
 document.getElementById("installBtn").addEventListener("click", async () => {
   if (deferredPrompt) {
     deferredPrompt.prompt();
@@ -380,6 +350,15 @@ document.getElementById("installBtn").addEventListener("click", async () => {
     deferredPrompt = null;
   }
 });
+
+// ─── REGISTER SERVICE WORKER FOR CUSTOM OFFLINE PAGE ───
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => console.log('Service Worker registered!', reg))
+      .catch((err) => console.error('Service Worker registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
