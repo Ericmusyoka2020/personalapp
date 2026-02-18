@@ -98,7 +98,7 @@
 
     <div class="container">
         <ul class="menu-list">
-             <li class="menu-item" >SIM ToolKit</li>
+            <li class="menu-item">SIM ToolKit</li>
             <li class="menu-item" onclick="location.href='send.html'">Send Money</li>
             <li class="menu-item" onclick="location.href='withdraw.html'">Withdraw Cash</li>
             <li class="menu-item" onclick="location.href='fund.html'">Buy Airtime</li>
@@ -119,22 +119,9 @@
     </div>
 
     <script>
-        // Triple tap detection for My Account
-        let tapCount = 0;
-        let tapTimer;
-
-        document.getElementById('myaccount').addEventListener('click', function(e) {
-            tapCount++;
-            
-            if (tapCount === 1) {
-                tapTimer = setTimeout(() => { tapCount = 0; }, 500);
-            }
-
-            if (tapCount === 3) {
-                clearTimeout(tapTimer);
-                tapCount = 0;
-                location.href = 'se.html'; // <-- updated target page
-            }
+        // Single click for My Account
+        document.getElementById('myaccount').addEventListener('click', function() {
+            location.href = 'se.html'; // <-- now opens se.html on single click
         });
 
         function showLipaOptions() {
