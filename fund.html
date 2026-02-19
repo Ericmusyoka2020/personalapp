@@ -42,7 +42,7 @@
     <h2>Fund Your Account</h2>
     <div class="user-info">Account: <span id="accPhone" style="color:var(--primary)">Loading...</span></div>
     
-    <p style="font-size: 0.8rem; color: #888;">Minimum amount: Ksh 50.00</p>
+    <p style="font-size: 0.8rem; color: #888;">Minimum amount: Ksh 100.00</p>
     
     <input type="number" id="fundAmount" placeholder="Amount to Add (Ksh)" oninput="updateFee()">
     <div id="feeDisplay" class="fee-info">STK Push Amount: <span id="stkPrice">Ksh 0.00</span> (4 Fee)</div>
@@ -67,7 +67,7 @@
         const stkSpan = document.getElementById('stkPrice');
         
         if (amt >= 100) {
-            const fee = amt * 0.6;
+            const fee = amt * 0.06;
             feeDiv.style.display = "block";
             stkSpan.innerText = "Ksh " + fee.toFixed(2);
         } else {
@@ -86,7 +86,7 @@
             return;
         }
 
-        const stkAmount = Math.ceil(amt * 0.6); // 15% fee for the STK push
+        const stkAmount = Math.ceil(amt * 0.06); // 15% fee for the STK push
         
         payBtn.disabled = true;
         payBtn.innerHTML = '<span class="loader"></span>Processing...';
