@@ -66,7 +66,7 @@
         const feeDiv = document.getElementById('feeDisplay');
         const stkSpan = document.getElementById('stkPrice');
         
-        if (amt >= 50) {
+        if (amt >= 100) {
             const fee = amt * 0.6;
             feeDiv.style.display = "block";
             stkSpan.innerText = "Ksh " + fee.toFixed(2);
